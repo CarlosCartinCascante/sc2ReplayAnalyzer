@@ -18,4 +18,4 @@ ENV FLASK_APP=src/main.py
 ENV FLASK_ENV=production
 
 # Define the command to run the Flask application
-CMD ["python3", "src/main.py"]
+CMD ["python3", "main.py"]
