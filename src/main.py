@@ -8,10 +8,21 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
+    """
+    Home route to check if the API is running.
+    Returns:
+        str: A message indicating that the API is running.
+    """
     return "API is running!"
 
 @app.route('/analyzeReplayBase64', methods=['POST'])
 def analyze_replay_base64():
+    """
+    Endpoint to analyze a replay file provided as a base64 encoded string.
+    Expects a JSON payload with a 'file_base64' key.
+    Returns:
+        JSON: Parsed replay information or an error message.
+    """
     data = request.json
     base64_string = data.get('file_base64')
 
@@ -26,15 +37,23 @@ def analyze_replay_base64():
 
 @app.route('/analyzeReplayUrl', methods=['POST'])
 def analyze_replay_url():
+    """
+    Endpoint to analyze a replay file provided as a URL.
+    Expects a JSON payload with a 'file_url' key.
+    Returns:
+        JSON: Parsed replay information or an error message.
+    """
     data = request.json
     replay_url = data.get('file_url')
 
     if not replay_url:
         return jsonify({"error": "No file_url provided"}), 400
 
-    response = requests.get(replay_url)
-    if response.status_code != 200:
-        return jsonify({"error": "Failed to download file"}), 400
+    try:
+        response = requests.get(replay_url)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": "Failed to download file", "details": str(e)}), 400
 
     replay_file = io.BytesIO(response.content)
 
