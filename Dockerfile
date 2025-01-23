@@ -14,8 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ .
 
 # Set environment variables for Flask
-ENV FLASK_APP=main.py
+ENV FLASK_APP=src/main.py
 ENV FLASK_ENV=production
 
 # Define the command to run the Flask application
-CMD ["flask", "run", "--host=0.0.0.0", "--port=10000"]
+CMD ["python3", "src/main.py"]
