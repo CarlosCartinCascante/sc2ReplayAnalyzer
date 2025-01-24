@@ -1,11 +1,15 @@
-from fastapi import FastAPI, HTTPException, File, UploadFile
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+import base64
 import aiohttp
 import spawningtool.parser
 import io
 import uvicorn
 
 app = FastAPI()
+
+class Base64Request(BaseModel):
+    file_base64: str
 
 class URLRequest(BaseModel):
     file_url: str
@@ -19,19 +23,27 @@ def read_root():
     """
     return {"message": "API is running!"}
 
-@app.post("/analyzeReplayFile")
-async def analyze_replay_file(file: UploadFile = File(...)):
+@app.post("/analyzeReplayBase64")
+async def analyze_replay_base64(request: Base64Request):
     """
-    Endpoint to analyze a replay file provided as a multipart form data file.
+    Endpoint to analyze a replay file provided as a base64 encoded string.
     Args:
-        file (UploadFile): The uploaded file.
+        request (Base64Request): The request body containing the base64 encoded string.
     Returns:
         dict: Parsed replay information.
     Raises:
-        HTTPException: If the file is not provided or if there is an error processing the file.
+        HTTPException: If the base64 string is not provided.
     """
+    base64_string = request.file_base64
+
+    if not base64_string:
+        raise HTTPException(status_code=400, detail="No file_base64 provided")
+
     try:
-        replay_info = spawningtool.parser.parse_replay(file.file)
+        # Decode the entire base64 string at once
+        decoded_data = base64.b64decode(base64_string)
+        replay_file = io.BytesIO(decoded_data)
+        replay_info = spawningtool.parser.parse_replay(replay_file)
         return replay_info
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to process file: {str(e)}") from e
