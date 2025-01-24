@@ -29,8 +29,15 @@ def analyze_replay_base64():
     if not base64_string:
         return jsonify({"error": "No file_base64 provided"}), 400
 
-    decoded_data = base64.b64decode(base64_string)
-    replay_file = io.BytesIO(decoded_data)
+    replay_file = io.BytesIO()
+    chunk_size = 8192  # Define the chunk size for processing
+
+    for i in range(0, len(base64_string), chunk_size):
+        chunk = base64_string[i:i + chunk_size]
+        decoded_chunk = base64.b64decode(chunk)
+        replay_file.write(decoded_chunk)
+
+    replay_file.seek(0)  # Reset the pointer to the beginning of the BytesIO object
 
     replay_info = spawningtool.parser.parse_replay(replay_file)
     return jsonify(replay_info), 200
@@ -50,12 +57,15 @@ def analyze_replay_url():
         return jsonify({"error": "No file_url provided"}), 400
 
     try:
-        response = requests.get(replay_url)
-        response.raise_for_status()
+        with requests.get(replay_url, stream=True) as response:
+            response.raise_for_status()
+            replay_file = io.BytesIO()
+            for chunk in response.iter_content(chunk_size=8192):
+                replay_file.write(chunk)
     except requests.exceptions.RequestException as e:
         return jsonify({"error": "Failed to download file", "details": str(e)}), 400
 
-    replay_file = io.BytesIO(response.content)
+    replay_file.seek(0)  # Reset the pointer to the beginning of the BytesIO object
 
     replay_info = spawningtool.parser.parse_replay(replay_file)
     return jsonify(replay_info), 200
