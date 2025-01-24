@@ -1,33 +1,29 @@
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 import base64
-import requests
+import aiohttp
 import spawningtool.parser
 import io
+import uvicorn
 
-app = Flask(__name__)
+app = FastAPI()
 
-@app.route('/')
-def home():
-    """
-    Home route to check if the API is running.
-    Returns:
-        str: A message indicating that the API is running.
-    """
-    return "API is running!"
+class Base64Request(BaseModel):
+    file_base64: str
 
-@app.route('/analyzeReplayBase64', methods=['POST'])
-def analyze_replay_base64():
-    """
-    Endpoint to analyze a replay file provided as a base64 encoded string.
-    Expects a JSON payload with a 'file_base64' key.
-    Returns:
-        JSON: Parsed replay information or an error message.
-    """
-    data = request.json
-    base64_string = data.get('file_base64')
+class URLRequest(BaseModel):
+    file_url: str
+
+@app.get("/")
+def read_root():
+    return {"message": "API is running!"}
+
+@app.post("/analyzeReplayBase64")
+async def analyze_replay_base64(request: Base64Request):
+    base64_string = request.file_base64
 
     if not base64_string:
-        return jsonify({"error": "No file_base64 provided"}), 400
+        raise HTTPException(status_code=400, detail="No file_base64 provided")
 
     replay_file = io.BytesIO()
     chunk_size = 8192  # Define the chunk size for processing
@@ -40,35 +36,29 @@ def analyze_replay_base64():
     replay_file.seek(0)  # Reset the pointer to the beginning of the BytesIO object
 
     replay_info = spawningtool.parser.parse_replay(replay_file)
-    return jsonify(replay_info), 200
+    return replay_info
 
-@app.route('/analyzeReplayUrl', methods=['POST'])
-def analyze_replay_url():
-    """
-    Endpoint to analyze a replay file provided as a URL.
-    Expects a JSON payload with a 'file_url' key.
-    Returns:
-        JSON: Parsed replay information or an error message.
-    """
-    data = request.json
-    replay_url = data.get('file_url')
+@app.post("/analyzeReplayUrl")
+async def analyze_replay_url(request: URLRequest):
+    replay_url = request.file_url
 
     if not replay_url:
-        return jsonify({"error": "No file_url provided"}), 400
+        raise HTTPException(status_code=400, detail="No file_url provided")
 
     try:
-        with requests.get(replay_url, stream=True) as response:
-            response.raise_for_status()
-            replay_file = io.BytesIO()
-            for chunk in response.iter_content(chunk_size=8192):
-                replay_file.write(chunk)
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": "Failed to download file", "details": str(e)}), 400
+        async with aiohttp.ClientSession() as session:
+            async with session.get(replay_url) as response:
+                response.raise_for_status()
+                replay_file = io.BytesIO()
+                async for chunk in response.content.iter_chunked(8192):
+                    replay_file.write(chunk)
+    except aiohttp.ClientError as e:
+        raise HTTPException(status_code=400, detail=f"Failed to download file: {str(e)}")
 
     replay_file.seek(0)  # Reset the pointer to the beginning of the BytesIO object
 
     replay_info = spawningtool.parser.parse_replay(replay_file)
-    return jsonify(replay_info), 200
+    return replay_info
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    uvicorn.run(app, host='0.0.0.0', port=5000)

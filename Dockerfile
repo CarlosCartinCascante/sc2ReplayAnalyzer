@@ -13,9 +13,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code from the host to the working directory in the container
 COPY src/ .
 
-# Set environment variables for Flask
-ENV FLASK_APP=src/main.py
-ENV FLASK_ENV=production
-
-# Define the command to run the Flask application
-CMD ["python3", "main.py"]
+# Define the command to run the FastAPI application with Uvicorn
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]

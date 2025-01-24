@@ -1,3 +1,5 @@
-Flask
+fastapi
+uvicorn
 spawningtool
-requests
+aiohttp
+httpx
