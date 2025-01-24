@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, File, UploadFile
 from pydantic import BaseModel
 import aiohttp
 import spawningtool.parser
+import io
 import uvicorn
 
 app = FastAPI()
