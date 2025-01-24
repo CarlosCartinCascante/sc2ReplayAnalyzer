@@ -16,10 +16,24 @@ class URLRequest(BaseModel):
 
 @app.get("/")
 def read_root():
+    """
+    Root endpoint to check if the API is running.
+    Returns:
+        dict: A message indicating that the API is running.
+    """
     return {"message": "API is running!"}
 
 @app.post("/analyzeReplayBase64")
 async def analyze_replay_base64(request: Base64Request):
+    """
+    Endpoint to analyze a replay file provided as a base64 encoded string.
+    Args:
+        request (Base64Request): The request body containing the base64 encoded string.
+    Returns:
+        dict: Parsed replay information.
+    Raises:
+        HTTPException: If the base64 string is not provided.
+    """
     base64_string = request.file_base64
 
     if not base64_string:
@@ -40,6 +54,15 @@ async def analyze_replay_base64(request: Base64Request):
 
 @app.post("/analyzeReplayUrl")
 async def analyze_replay_url(request: URLRequest):
+    """
+    Endpoint to analyze a replay file provided as a URL.
+    Args:
+        request (URLRequest): The request body containing the URL of the replay file.
+    Returns:
+        dict: Parsed replay information.
+    Raises:
+        HTTPException: If the URL is not provided or if the file download fails.
+    """
     replay_url = request.file_url
 
     if not replay_url:
@@ -53,7 +76,7 @@ async def analyze_replay_url(request: URLRequest):
                 async for chunk in response.content.iter_chunked(8192):
                     replay_file.write(chunk)
     except aiohttp.ClientError as e:
-        raise HTTPException(status_code=400, detail=f"Failed to download file: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to download file: {str(e)}") from e
 
     replay_file.seek(0)  # Reset the pointer to the beginning of the BytesIO object
 
