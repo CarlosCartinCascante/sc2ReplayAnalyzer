@@ -2,4 +2,4 @@ fastapi
 uvicorn
 spawningtool
 aiohttp
-httpx
+python-multipart

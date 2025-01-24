@@ -22,7 +22,7 @@ class FastAPITestCase(unittest.TestCase):
         Test the /analyzeReplayBase64 endpoint with no data.
         Ensure it returns a 422 status code and an appropriate error message.
         """
-        response = self.client.post('/analyzeReplayBase64', json={})
+        response = self.client.post('/analyzeReplayFile', json={})
         self.assertEqual(response.status_code, 422)
         self.assertIn('detail', response.json())
 
