@@ -19,13 +19,13 @@ A web application to analyze StarCraft 2 replay files using the Spawning Tool pa
 2. Install Dependencies:
     Run the following command to install all necessary packages:
     ```bash
-    pip install -r src/requirements.txt
+    pip install -r requirements.txt
     ```
 
 3. Start Development Server:
     Run the following command to start the Flask development server:
     ```bash
-    python3 src/main.py
+    uvicorn src.main:app --host 0.0.0.0 --port 8000
     ```
 
     The application will be available at [http://0.0.0.0:5000](http://0.0.0.0:5000).

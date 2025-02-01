@@ -8,7 +8,7 @@ WORKDIR /app
 RUN apk add --no-cache gcc musl-dev libffi-dev
 
 # Copy the requirements.txt file from the host to the working directory in the container
-COPY src/requirements.txt requirements.txt
+COPY requirements.txt requirements.txt
 
 # Install the Python dependencies specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt

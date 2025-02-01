@@ -1,0 +1,23 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "src/main.py",
+        "use": "@vercel/python"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "src/main.py"
+      }
+    ],
+    "env": {
+      "PYTHONUNBUFFERED": "1"
+    },
+    "build": {
+      "env": {
+        "PIP_NO_CACHE_DIR": "1"
+      }
+    }
+  }
